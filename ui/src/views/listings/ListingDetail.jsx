@@ -14,6 +14,8 @@ import {
   Row,
   Col,
   Image,
+  ImagePreview,
+  Carousel,
   Tag,
   Divider,
   Descriptions,
@@ -74,6 +76,8 @@ export default function ListingDetail() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     async function fetchListing() {
@@ -455,12 +459,59 @@ export default function ListingDetail() {
             <div
               className={`listing-detail__image-container${!listing.image_url ? ' listing-detail__image-container--placeholder' : ''}`}
             >
-              <Image
-                src={listing.image_url ?? no_image}
-                fallback={<img src={no_image} alt={t('listing.detail.noImageAlt')} />}
-                style={{ width: '100%', height: '100%' }}
-                preview={!!listing.image_url}
-              />
+              {Array.isArray(listing.images) && listing.images.length > 1 ? (
+                <>
+                  <Carousel
+                    className="listing-detail__carousel"
+                    autoPlay={false}
+                    showArrow
+                    theme="dark"
+                    style={{ width: '100%', height: '100%' }}
+                  >
+                    {listing.images.map((src, index) => (
+                      <div
+                        key={src ?? index}
+                        className="listing-detail__carousel-slide"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setPreviewIndex(index);
+                          setPreviewVisible(true);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setPreviewIndex(index);
+                            setPreviewVisible(true);
+                          }
+                        }}
+                      >
+                        <img
+                          src={src}
+                          alt={`${listing.title ?? ''} ${index + 1}`}
+                          loading="eager"
+                          onError={(e) => {
+                            e.target.src = no_image;
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </Carousel>
+                  <ImagePreview
+                    src={listing.images}
+                    visible={previewVisible}
+                    currentIndex={previewIndex}
+                    onVisibleChange={setPreviewVisible}
+                    onChange={setPreviewIndex}
+                  />
+                </>
+              ) : (
+                <Image
+                  src={listing.images?.[0] ?? listing.image_url ?? no_image}
+                  fallback={<img src={no_image} alt={t('listing.detail.noImageAlt')} />}
+                  style={{ width: '100%', height: '100%' }}
+                  preview={!!(listing.images?.[0] ?? listing.image_url)}
+                />
+              )}
             </div>
 
             <div className="listing-detail__notes">
@@ -506,6 +557,20 @@ export default function ListingDetail() {
                   </Descriptions.Item>
                 ))}
               </Descriptions>
+
+              {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
+                <>
+                  <Divider margin="1.5rem" />
+                  <Title heading={4} style={{ marginBottom: '1rem' }}>
+                    {t('listing.detail.attributesTitle')}
+                  </Title>
+                  <Descriptions
+                    align="left"
+                    data={listing.attributes.map((attribute) => ({ key: attribute.label, value: attribute.value }))}
+                  />
+                </>
+              )}
+
               <Divider margin="1.5rem" />
               <Title heading={4} style={{ marginBottom: '1rem' }}>
                 {t('listing.detail.descriptionTitle')}

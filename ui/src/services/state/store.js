@@ -275,6 +275,13 @@ export const useFredyState = create(
               throw Exception;
             }
           },
+          async markListingViewed(listingId) {
+            try {
+              await xhrPost(`/api/listings/${listingId}/viewed`, {});
+            } catch (Exception) {
+              console.error(`Error while trying to mark listing ${listingId} as viewed. Error:`, Exception);
+            }
+          },
           async setListingNotes(listingId, notes) {
             try {
               await xhrPost(`/api/listings/${listingId}/notes`, { notes });

@@ -3,7 +3,7 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-import { Fragment, useState, useCallback } from 'react';
+import { Fragment, useState, useCallback, useMemo } from 'react';
 
 import NotificationAdapterMutator from './components/notificationAdapter/NotificationAdapterMutator';
 import NotificationAdapterTable from '../../../components/table/NotificationAdapterTable';
@@ -40,6 +40,7 @@ export default function JobMutator() {
 
   const jobs = useSelector((state) => state.jobsData.jobs);
   const shareableUserList = useSelector((state) => state.jobsData.shareableUserList);
+  const allProviders = useSelector((state) => state.provider);
   const params = useParams();
   const location = useLocation();
 
@@ -72,6 +73,14 @@ export default function JobMutator() {
   const [specFilter, setSpecFilter] = useState(defaultSpecFilter);
   const navigate = useNavigate();
   const actions = useActions();
+
+  // Country the area-filter map focuses on: 'at' only when every selected provider
+  // is Austrian, otherwise the broader German view.
+  const selectedCountry = useMemo(() => {
+    if (!providerData.length) return 'de';
+    const countries = providerData.map((p) => allProviders?.find((ap) => ap.id === p.id)?.country || 'de');
+    return countries.every((c) => c === 'at') ? 'at' : 'de';
+  }, [providerData, allProviders]);
 
   // Memoize the spatial filter change handler to prevent map reinitializations
   const handleSpatialFilterChange = useCallback((data) => {
@@ -267,7 +276,7 @@ export default function JobMutator() {
           name={t('jobs.mutation.sectionAreaFilter')}
           helpText={t('jobs.mutation.areaFilterHelp')}
         >
-          <AreaFilter spatialFilter={spatialFilter} onChange={handleSpatialFilterChange} />
+          <AreaFilter spatialFilter={spatialFilter} onChange={handleSpatialFilterChange} country={selectedCountry} />
         </SegmentPart>
         <Divider margin="1rem" />
         <SegmentPart Icon={IconUser} name={t('jobs.mutation.sectionSharing')} helpText={t('jobs.mutation.sharingHelp')}>

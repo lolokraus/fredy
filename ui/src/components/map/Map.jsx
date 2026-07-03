@@ -11,10 +11,40 @@ import { fixMapboxDrawCompatibility, addDrawingControl, setupAreaFilterEventList
 import { getBoundsFromCoords } from '../../views/listings/mapUtils.js';
 import './Map.less';
 
-export const GERMANY_BOUNDS = [
-  [5.866, 47.27], // Southwest coordinates
-  [15.042, 55.059], // Northeast coordinates
-];
+export const DEFAULT_COUNTRY = 'de';
+
+// Per-country view config, keyed by metaInformation.country ([SW, NE] in [lng, lat]).
+// fitBounds() targets `fitBounds` (the country extent) so the whole country is framed
+// at any size; `maxBounds` must be a generous superset, else MapLibre over-zooms to
+// satisfy it and clips the view. `center`/`zoom` are only the pre-fit seed.
+export const COUNTRY_VIEWS = {
+  de: {
+    center: [10.4515, 51.1657],
+    zoom: 4,
+    fitBounds: [
+      [5.866, 47.27],
+      [15.042, 55.059],
+    ],
+    maxBounds: [
+      [3.0, 45.0],
+      [18.5, 56.5],
+    ],
+  },
+  at: {
+    center: [14.1, 47.6],
+    zoom: 6,
+    fitBounds: [
+      [9.4, 46.3],
+      [17.3, 49.1],
+    ],
+    maxBounds: [
+      [7.0, 44.5],
+      [19.5, 50.5],
+    ],
+  },
+};
+
+export const getCountryView = (country) => COUNTRY_VIEWS[country] ?? COUNTRY_VIEWS[DEFAULT_COUNTRY];
 
 export const STYLES = {
   STANDARD: 'https://tiles.openfreemap.org/styles/bright',
@@ -63,6 +93,7 @@ export default function Map({
   enableDrawing = false,
   initialSpatialFilter = null,
   onDrawingChange = null,
+  country = DEFAULT_COUNTRY,
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -73,12 +104,13 @@ export default function Map({
   useEffect(() => {
     if (mapRef.current) return; // Map already exists, don't reinitialize
 
+    const initialView = getCountryView(country);
     mapRef.current = new maplibregl.Map({
       container: mapContainerRef.current,
       style: STYLES[style],
-      center: [10.4515, 51.1657], // Center of Germany
-      zoom: 4,
-      maxBounds: GERMANY_BOUNDS,
+      center: initialView.center,
+      zoom: initialView.zoom,
+      maxBounds: initialView.maxBounds,
       antialias: true,
     });
 
@@ -155,6 +187,19 @@ export default function Map({
       mapRef.current.setStyle(STYLES[style]);
     }
   }, [style]);
+
+  // Re-frame / re-constrain the map when the country changes. maxBounds is widened
+  // first so the fitBounds isn't clamped; re-framing is skipped when an area is
+  // already drawn, to avoid pulling the user off their filter.
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const view = getCountryView(country);
+    mapRef.current.setMaxBounds(null);
+    mapRef.current.setMaxBounds(view.maxBounds);
+    if (!initialSpatialFilter) {
+      mapRef.current.fitBounds(view.fitBounds, { padding: 20, duration: 0 });
+    }
+  }, [country]);
 
   // Handle 3D buildings layer
   useEffect(() => {

@@ -57,6 +57,7 @@ const ListingsOverview = ({ mode = 'all' }) => {
   const [sortDir, setSortDir] = useSearchParamState(sp, 'dir', 'desc', parseString);
   const [freeTextFilter, setFreeTextFilter] = useSearchParamState(sp, 'q', null, parseString);
   const [watchListFilter, setWatchListFilter] = useSearchParamState(sp, 'watch', null, parseNullableBoolean);
+  const [viewedFilter, setViewedFilter] = useSearchParamState(sp, 'viewed', null, parseNullableBoolean);
   const [jobNameFilter, setJobNameFilter] = useSearchParamState(sp, 'job', null, parseString);
   const [activityFilter, setActivityFilter] = useSearchParamState(sp, 'active', null, parseNullableBoolean);
   const [providerFilter, setProviderFilter] = useSearchParamState(sp, 'provider', null, parseString);
@@ -79,6 +80,7 @@ const ListingsOverview = ({ mode = 'all' }) => {
       freeTextFilter,
       filter: {
         watchListFilter: effectiveWatchListFilter,
+        viewedFilter,
         jobNameFilter,
         activityFilter: isHiddenView ? null : activityFilter,
         providerFilter,
@@ -99,6 +101,7 @@ const ListingsOverview = ({ mode = 'all' }) => {
     activityFilter,
     jobNameFilter,
     watchListFilter,
+    viewedFilter,
     statusFilter,
     hiddenOnly,
     isWatchlistMode,
@@ -167,6 +170,7 @@ const ListingsOverview = ({ mode = 'all' }) => {
 
   const handleNavigate = (id) => {
     if (isHiddenView) return;
+    actions.listingsData.markListingViewed(id);
     navigate(`/listings/listing/${id}`);
   };
 
@@ -251,6 +255,25 @@ const ListingsOverview = ({ mode = 'all' }) => {
             </span>
           </Tooltip>
         )}
+
+        <Tooltip content={t('listings.filterViewedHelp')} trigger="hover" position="top">
+          <span className="listingsOverview__topbar__tooltipWrap">
+            <RadioGroup
+              type="button"
+              buttonSize="middle"
+              value={viewedFilter === null ? 'all' : String(viewedFilter)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setViewedFilter(v === 'all' ? null : v === 'true');
+                setPage(1);
+              }}
+            >
+              <Radio value="all">{t('listings.filterAll')}</Radio>
+              <Radio value="true">{t('listings.filterViewed')}</Radio>
+              <Radio value="false">{t('listings.filterUnviewed')}</Radio>
+            </RadioGroup>
+          </span>
+        </Tooltip>
 
         <Tooltip content={t('listings.filterStatusHelp')} trigger="hover" position="top">
           <span className="listingsOverview__topbar__tooltipWrap">

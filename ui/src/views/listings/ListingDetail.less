@@ -66,7 +66,7 @@
     .semi-image-img {
       width: 100% !important;
       height: 100% !important;
-      object-fit: cover !important;
+      object-fit: contain !important;
       display: block !important;
     }
 
@@ -75,6 +75,30 @@
       .semi-image-img {
         object-fit: contain !important;
       }
+    }
+  }
+
+  &__carousel {
+    width: 100%;
+    height: 100%;
+
+    .semi-carousel-content,
+    .semi-carousel-content-item {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__carousel-slide {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+
+    // contain (not cover) so the whole photo is visible; the frame letterboxes it.
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
   }
 

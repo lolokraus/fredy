@@ -6,7 +6,7 @@
 import Map from '../../../../../components/map/Map.jsx';
 import './AreaFilter.less';
 
-export default function AreaFilter({ spatialFilter = null, onChange = null }) {
+export default function AreaFilter({ spatialFilter = null, onChange = null, country = 'de' }) {
   return (
     <div className="areaFilter">
       <Map
@@ -15,6 +15,7 @@ export default function AreaFilter({ spatialFilter = null, onChange = null }) {
         enableDrawing={true}
         initialSpatialFilter={spatialFilter}
         onDrawingChange={onChange}
+        country={country}
       />
     </div>
   );

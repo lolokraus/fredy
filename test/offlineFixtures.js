@@ -88,9 +88,25 @@ export async function readFixture(url) {
 export function buildFetchMock() {
   let listData = null;
   let detailData = null;
+  let willhabenHtml = null;
+  let willhabenDetailHtml = null;
 
   return async (url) => {
     const urlStr = String(url);
+
+    // Willhaben parses embedded __NEXT_DATA__ from page HTML; detail URLs carry `/d/`.
+    if (urlStr.includes('willhaben.at')) {
+      if (urlStr.includes('/d/')) {
+        if (willhabenDetailHtml == null) {
+          willhabenDetailHtml = (await tryReadFile(path.join(FIXTURES_DIR, 'willhaben_detail.html'))) ?? '';
+        }
+        return { ok: true, status: 200, text: () => Promise.resolve(willhabenDetailHtml) };
+      }
+      if (willhabenHtml == null) {
+        willhabenHtml = (await tryReadFile(path.join(FIXTURES_DIR, 'willhaben.html'))) ?? '';
+      }
+      return { ok: true, status: 200, text: () => Promise.resolve(willhabenHtml) };
+    }
 
     if (urlStr.includes('api.mobile.immobilienscout24.de/search/list')) {
       if (!listData) {

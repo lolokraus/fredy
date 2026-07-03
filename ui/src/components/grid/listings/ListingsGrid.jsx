@@ -32,7 +32,7 @@ const ListingsGrid = ({ listings, onWatch, onNavigate, onDelete, onRestore, isHi
       {listings.map((item) => (
         <div
           key={item.id}
-          className="listingsGrid__card"
+          className={`listingsGrid__card${item.viewed ? ' listingsGrid__card--viewed' : ''}`}
           style={{ cursor: 'pointer' }}
           role="button"
           tabIndex={0}
@@ -52,6 +52,12 @@ const ListingsGrid = ({ listings, onWatch, onNavigate, onDelete, onRestore, isHi
             {!item.is_active && (
               <div className="listingsGrid__card__inactive-watermark">
                 <span>{t('listings.cardInactive')}</span>
+              </div>
+            )}
+            {item.viewed === 1 && (
+              <div className="listingsGrid__card__viewed-badge">
+                <IconEyeOpened size="small" />
+                <span>{t('listings.filterViewed')}</span>
               </div>
             )}
             <Tooltip
